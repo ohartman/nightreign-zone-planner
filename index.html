@@ -8,6 +8,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             margin: 0;
@@ -16,12 +17,10 @@
             -webkit-overflow-scrolling: touch;
         }
         
-        /* Prevent pull-to-refresh on mobile */
         body {
             overscroll-behavior-y: contain;
         }
         
-        /* Better tap target sizes on mobile */
         button, select, input, textarea {
             -webkit-tap-highlight-color: transparent;
         }
@@ -30,9 +29,500 @@
 <body>
     <div id="root"></div>
     
-    <script type="text/babel" src="nightreign-zone-planner.jsx"></script>
-    
     <script type="text/babel">
+        const { Save, Trash2, MapPin, Flag, Skull, Package, Users, Plus, X, Target, Clock, Navigation, Mountain, Trees, Waves, Flame, Snowflake, Zap, Castle } = lucide;
+
+        const NightreignZonePlanner = () => {
+          const [activeZones, setActiveZones] = React.useState([]);
+          const [zoneStrategies, setZoneStrategies] = React.useState({});
+          const [savedPlans, setSavedPlans] = React.useState([]);
+          const [planName, setPlanName] = React.useState('');
+          const [selectedNight, setSelectedNight] = React.useState(1);
+          const [showSidebar, setShowSidebar] = React.useState(true);
+          const [editingZone, setEditingZone] = React.useState(null);
+
+          const zones = {
+            limgrave: { 
+              name: 'Limgrave Plains', 
+              icon: Trees, 
+              color: 'bg-green-600',
+              description: 'Starting area with basic enemies and resources'
+            },
+            weeping: { 
+              name: 'Weeping Peninsula', 
+              icon: Waves, 
+              color: 'bg-blue-600',
+              description: 'Coastal region with water hazards'
+            },
+            caelid: { 
+              name: 'Caelid Wastes', 
+              icon: Flame, 
+              color: 'bg-red-600',
+              description: 'Corrupted lands with tough enemies'
+            },
+            liurnia: { 
+              name: 'Liurnia Lakes', 
+              icon: Waves, 
+              color: 'bg-cyan-600',
+              description: 'Magical academy region'
+            },
+            altus: { 
+              name: 'Altus Plateau', 
+              icon: Mountain, 
+              color: 'bg-yellow-600',
+              description: 'Elevated golden lands'
+            },
+            mountaintops: { 
+              name: 'Mountaintops', 
+              icon: Snowflake, 
+              color: 'bg-slate-400',
+              description: 'Frozen peaks with harsh conditions'
+            },
+            leyndell: { 
+              name: 'Leyndell Ruins', 
+              icon: Castle, 
+              color: 'bg-amber-700',
+              description: 'Royal capital ruins'
+            },
+            underground: { 
+              name: 'Underground', 
+              icon: Mountain, 
+              color: 'bg-purple-800',
+              description: 'Subterranean areas'
+            }
+          };
+
+          const landmarkTypes = {
+            boss: { icon: Skull, color: 'text-red-400', label: 'Boss Arena' },
+            loot: { icon: Package, color: 'text-blue-400', label: 'Major Loot' },
+            npc: { icon: Users, color: 'text-green-400', label: 'NPC/Merchant' },
+            shrine: { icon: Flag, color: 'text-purple-400', label: 'Grace/Shrine' },
+            hazard: { icon: Zap, color: 'text-yellow-400', label: 'Hazard/Trap' },
+            objective: { icon: Target, color: 'text-orange-400', label: 'Objective' }
+          };
+
+          const toggleZone = (zoneKey) => {
+            if (activeZones.includes(zoneKey)) {
+              setActiveZones(activeZones.filter(z => z !== zoneKey));
+              const newStrats = { ...zoneStrategies };
+              delete newStrats[zoneKey];
+              setZoneStrategies(newStrats);
+            } else {
+              setActiveZones([...activeZones, zoneKey]);
+              setZoneStrategies({
+                ...zoneStrategies,
+                [zoneKey]: {
+                  priority: 'medium',
+                  landmarks: [],
+                  notes: '',
+                  visitNight: selectedNight,
+                  routeOrder: activeZones.length + 1
+                }
+              });
+            }
+          };
+
+          const addLandmark = (zoneKey, type, description) => {
+            const newStrats = { ...zoneStrategies };
+            if (!newStrats[zoneKey].landmarks) {
+              newStrats[zoneKey].landmarks = [];
+            }
+            newStrats[zoneKey].landmarks.push({
+              id: Date.now(),
+              type,
+              description,
+              found: false
+            });
+            setZoneStrategies(newStrats);
+          };
+
+          const toggleLandmarkFound = (zoneKey, landmarkId) => {
+            const newStrats = { ...zoneStrategies };
+            const landmark = newStrats[zoneKey].landmarks.find(l => l.id === landmarkId);
+            if (landmark) {
+              landmark.found = !landmark.found;
+              setZoneStrategies(newStrats);
+            }
+          };
+
+          const deleteLandmark = (zoneKey, landmarkId) => {
+            const newStrats = { ...zoneStrategies };
+            newStrats[zoneKey].landmarks = newStrats[zoneKey].landmarks.filter(l => l.id !== landmarkId);
+            setZoneStrategies(newStrats);
+          };
+
+          const updateZoneStrategy = (zoneKey, field, value) => {
+            const newStrats = { ...zoneStrategies };
+            newStrats[zoneKey][field] = value;
+            setZoneStrategies(newStrats);
+          };
+
+          const savePlan = () => {
+            if (!planName.trim()) {
+              alert('Please enter a plan name');
+              return;
+            }
+
+            const plan = {
+              id: Date.now(),
+              name: planName,
+              activeZones,
+              zoneStrategies,
+              createdAt: new Date().toISOString()
+            };
+
+            setSavedPlans([...savedPlans, plan]);
+            setPlanName('');
+          };
+
+          const loadPlan = (plan) => {
+            setActiveZones(plan.activeZones);
+            setZoneStrategies(plan.zoneStrategies);
+          };
+
+          const deletePlan = (id) => {
+            setSavedPlans(savedPlans.filter(p => p.id !== id));
+          };
+
+          const clearAll = () => {
+            if (confirm('Clear current run planning?')) {
+              setActiveZones([]);
+              setZoneStrategies({});
+              setEditingZone(null);
+            }
+          };
+
+          const sortedZones = activeZones.sort((a, b) => {
+            const orderA = zoneStrategies[a]?.routeOrder || 999;
+            const orderB = zoneStrategies[b]?.routeOrder || 999;
+            return orderA - orderB;
+          });
+
+          const getPriorityColor = (priority) => {
+            switch (priority) {
+              case 'high': return 'bg-red-600';
+              case 'medium': return 'bg-yellow-600';
+              case 'low': return 'bg-green-600';
+              default: return 'bg-slate-600';
+            }
+          };
+
+          return (
+            <div className="w-full h-screen bg-slate-900 text-white flex flex-col lg:flex-row overflow-hidden">
+              {/* Sidebar */}
+              <div className={`${showSidebar ? 'w-full lg:w-96 h-auto lg:h-full' : 'w-0 h-0'} transition-all duration-300 bg-slate-800 overflow-hidden flex flex-col`}>
+                <div className="p-4 border-b border-slate-700">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Navigation className="w-5 h-5" />
+                    Zone Planner
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">Plan your strategy based on spawned zones</p>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-6 max-h-[50vh] lg:max-h-full">
+                  {/* Night Selector */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-300">Current Day/Night</label>
+                    <select 
+                      value={selectedNight}
+                      onChange={(e) => setSelectedNight(Number(e.target.value))}
+                      className="w-full bg-slate-700 rounded px-3 py-2 text-sm"
+                    >
+                      <option value={1}>Day 1</option>
+                      <option value={2}>Night 1 (Boss)</option>
+                      <option value={3}>Day 2</option>
+                      <option value={4}>Night 2 (Boss)</option>
+                      <option value={5}>Day 3 (Nightlord)</option>
+                    </select>
+                  </div>
+
+                  {/* Available Zones */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm text-slate-300">Available Zones</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(zones).map(([key, zone]) => {
+                        const ZoneIcon = zone.icon;
+                        const isActive = activeZones.includes(key);
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => toggleZone(key)}
+                            className={`${isActive ? zone.color : 'bg-slate-700'} p-3 rounded text-xs font-medium transition-all hover:opacity-80`}
+                          >
+                            <ZoneIcon className="w-5 h-5 mx-auto mb-1" />
+                            <div className="truncate">{zone.name}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Saved Plans */}
+                  {savedPlans.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm text-slate-300">Saved Plans</h3>
+                      {savedPlans.map(plan => (
+                        <div key={plan.id} className="bg-slate-700 rounded p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium truncate">{plan.name}</span>
+                            <button
+                              onClick={() => deletePlan(plan.id)}
+                              className="text-red-400 hover:text-red-300 flex-shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {plan.activeZones.length} zones
+                          </div>
+                          <button
+                            onClick={() => loadPlan(plan)}
+                            className="w-full bg-blue-600 hover:bg-blue-700 rounded px-2 py-1 text-xs"
+                          >
+                            Load
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Save Current Plan */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm text-slate-300">Save Plan</h3>
+                    <input
+                      type="text"
+                      placeholder="Plan name"
+                      value={planName}
+                      onChange={(e) => setPlanName(e.target.value)}
+                      className="w-full bg-slate-700 rounded px-3 py-2 text-sm"
+                    />
+                    <button
+                      onClick={savePlan}
+                      disabled={activeZones.length === 0}
+                      className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded px-3 py-2 text-sm flex items-center justify-center gap-2"
+                    >
+                      <Save className="w-4 h-4" />
+                      Save Plan
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={clearAll}
+                    disabled={activeZones.length === 0}
+                    className="w-full bg-red-600 hover:bg-red-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded px-3 py-2 text-sm flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear Run
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="flex-1 flex flex-col min-h-0">
+                <div className="bg-slate-800 p-3 lg:p-4 border-b border-slate-700 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-lg lg:text-2xl font-bold truncate">Nightreign Zone Planner</h1>
+                    <p className="text-xs lg:text-sm text-slate-400 hidden sm:block">Select zones • Plan route • Track landmarks</p>
+                  </div>
+                  <button
+                    onClick={() => setShowSidebar(!showSidebar)}
+                    className="bg-slate-700 hover:bg-slate-600 rounded px-3 lg:px-4 py-2 text-sm flex-shrink-0"
+                  >
+                    {showSidebar ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-3 lg:p-6">
+                  {activeZones.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center text-slate-400 p-4">
+                        <Mountain className="w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-base lg:text-lg">No zones selected</p>
+                        <p className="text-xs lg:text-sm">Click zones in the sidebar to start planning</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 lg:space-y-4">
+                      {/* Route Order Overview */}
+                      <div className="bg-slate-800 rounded-lg p-3 lg:p-4">
+                        <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm lg:text-base">
+                          <Navigation className="w-4 h-4 lg:w-5 lg:h-5" />
+                          Planned Route Order
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {sortedZones.map((zoneKey, index) => {
+                            const zone = zones[zoneKey];
+                            const ZoneIcon = zone.icon;
+                            const strategy = zoneStrategies[zoneKey];
+                            return (
+                              <div
+                                key={zoneKey}
+                                className={`${zone.color} rounded px-2 lg:px-3 py-1 lg:py-2 flex items-center gap-1 lg:gap-2 text-xs lg:text-sm`}
+                              >
+                                <span className="font-bold">{index + 1}.</span>
+                                <ZoneIcon className="w-3 h-3 lg:w-4 lg:h-4" />
+                                <span className="hidden sm:inline">{zone.name}</span>
+                                <span className="sm:hidden">{zone.name.split(' ')[0]}</span>
+                                <span className={`ml-1 lg:ml-2 px-1 lg:px-2 py-0.5 rounded text-xs ${getPriorityColor(strategy.priority)}`}>
+                                  {strategy.priority}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Zone Details */}
+                      {sortedZones.map((zoneKey) => {
+                        const zone = zones[zoneKey];
+                        const strategy = zoneStrategies[zoneKey];
+                        const ZoneIcon = zone.icon;
+                        const isEditing = editingZone === zoneKey;
+
+                        return (
+                          <div key={zoneKey} className="bg-slate-800 rounded-lg overflow-hidden">
+                            <div className={`${zone.color} p-3 lg:p-4 flex items-center justify-between gap-2`}>
+                              <div className="flex items-center gap-2 lg:gap-3 min-w-0 flex-1">
+                                <ZoneIcon className="w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-bold text-base lg:text-lg truncate">{zone.name}</h3>
+                                  <p className="text-xs lg:text-sm opacity-90 hidden sm:block">{zone.description}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setEditingZone(isEditing ? null : zoneKey)}
+                                className="bg-black bg-opacity-30 hover:bg-opacity-40 rounded px-2 lg:px-3 py-1 text-xs lg:text-sm flex-shrink-0"
+                              >
+                                {isEditing ? 'Close' : 'Edit'}
+                              </button>
+                            </div>
+
+                            <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
+                              {/* Strategy Settings */}
+                              <div className="grid grid-cols-3 gap-2 lg:gap-3">
+                                <div>
+                                  <label className="text-xs text-slate-400 block mb-1">Priority</label>
+                                  <select
+                                    value={strategy.priority}
+                                    onChange={(e) => updateZoneStrategy(zoneKey, 'priority', e.target.value)}
+                                    className="w-full bg-slate-700 rounded px-2 py-1 text-xs lg:text-sm"
+                                  >
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="text-xs text-slate-400 block mb-1">Visit When</label>
+                                  <select
+                                    value={strategy.visitNight}
+                                    onChange={(e) => updateZoneStrategy(zoneKey, 'visitNight', Number(e.target.value))}
+                                    className="w-full bg-slate-700 rounded px-2 py-1 text-xs lg:text-sm"
+                                  >
+                                    <option value={1}>Day 1</option>
+                                    <option value={2}>Night 1</option>
+                                    <option value={3}>Day 2</option>
+                                    <option value={4}>Night 2</option>
+                                    <option value={5}>Day 3</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="text-xs text-slate-400 block mb-1">Order</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={strategy.routeOrder}
+                                    onChange={(e) => updateZoneStrategy(zoneKey, 'routeOrder', Number(e.target.value))}
+                                    className="w-full bg-slate-700 rounded px-2 py-1 text-xs lg:text-sm"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Notes */}
+                              <div>
+                                <label className="text-xs text-slate-400 block mb-1">Strategy Notes</label>
+                                <textarea
+                                  value={strategy.notes}
+                                  onChange={(e) => updateZoneStrategy(zoneKey, 'notes', e.target.value)}
+                                  placeholder="Add notes about this zone..."
+                                  className="w-full bg-slate-700 rounded px-3 py-2 text-xs lg:text-sm h-16 lg:h-20 resize-none"
+                                />
+                              </div>
+
+                              {/* Landmarks */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-xs lg:text-sm font-semibold text-slate-300">Landmarks</label>
+                                  {isEditing && (
+                                    <button
+                                      onClick={() => {
+                                        const type = prompt('Landmark type (boss/loot/npc/shrine/hazard/objective):');
+                                        const description = prompt('Landmark description:');
+                                        if (type && description && landmarkTypes[type]) {
+                                          addLandmark(zoneKey, type, description);
+                                        }
+                                      }}
+                                      className="bg-blue-600 hover:bg-blue-700 rounded px-2 py-1 text-xs flex items-center gap-1"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                      Add
+                                    </button>
+                                  )}
+                                </div>
+                                <div className="space-y-2">
+                                  {strategy.landmarks && strategy.landmarks.length > 0 ? (
+                                    strategy.landmarks.map(landmark => {
+                                      const LandmarkIcon = landmarkTypes[landmark.type].icon;
+                                      return (
+                                        <div
+                                          key={landmark.id}
+                                          className={`bg-slate-700 rounded p-2 lg:p-3 flex items-center justify-between gap-2 ${landmark.found ? 'opacity-60' : ''}`}
+                                        >
+                                          <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
+                                            <button
+                                              onClick={() => toggleLandmarkFound(zoneKey, landmark.id)}
+                                              className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                                                landmark.found ? 'bg-green-600 border-green-600' : 'border-slate-500'
+                                              }`}
+                                            >
+                                              {landmark.found && <span className="text-xs">✓</span>}
+                                            </button>
+                                            <LandmarkIcon className={`w-4 h-4 flex-shrink-0 ${landmarkTypes[landmark.type].color}`} />
+                                            <div className="min-w-0 flex-1">
+                                              <div className="text-xs lg:text-sm font-medium truncate">{landmark.description}</div>
+                                              <div className="text-xs text-slate-400">{landmarkTypes[landmark.type].label}</div>
+                                            </div>
+                                          </div>
+                                          {isEditing && (
+                                            <button
+                                              onClick={() => deleteLandmark(zoneKey, landmark.id)}
+                                              className="text-red-400 hover:text-red-300 flex-shrink-0"
+                                            >
+                                              <X className="w-4 h-4" />
+                                            </button>
+                                          )}
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    <div className="text-xs lg:text-sm text-slate-500 text-center py-4">
+                                      No landmarks added yet
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<NightreignZonePlanner />);
     </script>
