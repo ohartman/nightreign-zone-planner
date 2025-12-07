@@ -177,9 +177,9 @@ const NightreignZonePlanner = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-slate-900 text-white flex overflow-hidden">
+    <div className="w-full h-screen bg-slate-900 text-white flex flex-col lg:flex-row overflow-hidden">
       {/* Sidebar */}
-      <div className={`${showSidebar ? 'w-96' : 'w-0'} transition-all duration-300 bg-slate-800 overflow-hidden flex flex-col`}>
+      <div className={`${showSidebar ? 'w-full lg:w-96 h-auto lg:h-full' : 'w-0 h-0'} transition-all duration-300 bg-slate-800 overflow-hidden flex flex-col`}>
         <div className="p-4 border-b border-slate-700">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Navigation className="w-5 h-5" />
@@ -188,7 +188,7 @@ const NightreignZonePlanner = () => {
           <p className="text-xs text-slate-400 mt-1">Plan your strategy based on spawned zones</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 max-h-[50vh] lg:max-h-full">
           {/* Night Selector */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-300">Current Day/Night</label>
@@ -219,7 +219,7 @@ const NightreignZonePlanner = () => {
                     className={`${isActive ? zone.color : 'bg-slate-700'} p-3 rounded text-xs font-medium transition-all hover:opacity-80`}
                   >
                     <ZoneIcon className="w-5 h-5 mx-auto mb-1" />
-                    {zone.name}
+                    <div className="truncate">{zone.name}</div>
                   </button>
                 );
               })}
@@ -233,10 +233,10 @@ const NightreignZonePlanner = () => {
               {savedPlans.map(plan => (
                 <div key={plan.id} className="bg-slate-700 rounded p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{plan.name}</span>
+                    <span className="text-sm font-medium truncate">{plan.name}</span>
                     <button
                       onClick={() => deletePlan(plan.id)}
-                      className="text-red-400 hover:text-red-300"
+                      className="text-red-400 hover:text-red-300 flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -287,35 +287,35 @@ const NightreignZonePlanner = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <div className="bg-slate-800 p-4 border-b border-slate-700 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Nightreign Zone Strategy Planner</h1>
-            <p className="text-sm text-slate-400">Select zones that spawned • Plan your route • Track landmarks</p>
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="bg-slate-800 p-3 lg:p-4 border-b border-slate-700 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg lg:text-2xl font-bold truncate">Nightreign Zone Planner</h1>
+            <p className="text-xs lg:text-sm text-slate-400 hidden sm:block">Select zones • Plan route • Track landmarks</p>
           </div>
           <button
             onClick={() => setShowSidebar(!showSidebar)}
-            className="bg-slate-700 hover:bg-slate-600 rounded px-4 py-2 text-sm"
+            className="bg-slate-700 hover:bg-slate-600 rounded px-3 lg:px-4 py-2 text-sm flex-shrink-0"
           >
-            {showSidebar ? 'Hide' : 'Show'} Sidebar
+            {showSidebar ? 'Hide' : 'Show'}
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 lg:p-6">
           {activeZones.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center text-slate-400">
-                <Mountain className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">No zones selected</p>
-                <p className="text-sm">Click zones in the sidebar to start planning your run</p>
+              <div className="text-center text-slate-400 p-4">
+                <Mountain className="w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-base lg:text-lg">No zones selected</p>
+                <p className="text-xs lg:text-sm">Click zones in the sidebar to start planning</p>
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               {/* Route Order Overview */}
-              <div className="bg-slate-800 rounded-lg p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Navigation className="w-5 h-5" />
+              <div className="bg-slate-800 rounded-lg p-3 lg:p-4">
+                <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm lg:text-base">
+                  <Navigation className="w-4 h-4 lg:w-5 lg:h-5" />
                   Planned Route Order
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -326,12 +326,13 @@ const NightreignZonePlanner = () => {
                     return (
                       <div
                         key={zoneKey}
-                        className={`${zone.color} rounded px-3 py-2 flex items-center gap-2 text-sm`}
+                        className={`${zone.color} rounded px-2 lg:px-3 py-1 lg:py-2 flex items-center gap-1 lg:gap-2 text-xs lg:text-sm`}
                       >
                         <span className="font-bold">{index + 1}.</span>
-                        <ZoneIcon className="w-4 h-4" />
-                        <span>{zone.name}</span>
-                        <span className={`ml-2 px-2 py-0.5 rounded text-xs ${getPriorityColor(strategy.priority)}`}>
+                        <ZoneIcon className="w-3 h-3 lg:w-4 lg:h-4" />
+                        <span className="hidden sm:inline">{zone.name}</span>
+                        <span className="sm:hidden">{zone.name.split(' ')[0]}</span>
+                        <span className={`ml-1 lg:ml-2 px-1 lg:px-2 py-0.5 rounded text-xs ${getPriorityColor(strategy.priority)}`}>
                           {strategy.priority}
                         </span>
                       </div>
@@ -349,31 +350,31 @@ const NightreignZonePlanner = () => {
 
                 return (
                   <div key={zoneKey} className="bg-slate-800 rounded-lg overflow-hidden">
-                    <div className={`${zone.color} p-4 flex items-center justify-between`}>
-                      <div className="flex items-center gap-3">
-                        <ZoneIcon className="w-6 h-6" />
-                        <div>
-                          <h3 className="font-bold text-lg">{zone.name}</h3>
-                          <p className="text-sm opacity-90">{zone.description}</p>
+                    <div className={`${zone.color} p-3 lg:p-4 flex items-center justify-between gap-2`}>
+                      <div className="flex items-center gap-2 lg:gap-3 min-w-0 flex-1">
+                        <ZoneIcon className="w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-base lg:text-lg truncate">{zone.name}</h3>
+                          <p className="text-xs lg:text-sm opacity-90 hidden sm:block">{zone.description}</p>
                         </div>
                       </div>
                       <button
                         onClick={() => setEditingZone(isEditing ? null : zoneKey)}
-                        className="bg-black bg-opacity-30 hover:bg-opacity-40 rounded px-3 py-1 text-sm"
+                        className="bg-black bg-opacity-30 hover:bg-opacity-40 rounded px-2 lg:px-3 py-1 text-xs lg:text-sm flex-shrink-0"
                       >
                         {isEditing ? 'Close' : 'Edit'}
                       </button>
                     </div>
 
-                    <div className="p-4 space-y-4">
+                    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
                       {/* Strategy Settings */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-2 lg:gap-3">
                         <div>
                           <label className="text-xs text-slate-400 block mb-1">Priority</label>
                           <select
                             value={strategy.priority}
                             onChange={(e) => updateZoneStrategy(zoneKey, 'priority', e.target.value)}
-                            className="w-full bg-slate-700 rounded px-2 py-1 text-sm"
+                            className="w-full bg-slate-700 rounded px-2 py-1 text-xs lg:text-sm"
                           >
                             <option value="high">High</option>
                             <option value="medium">Medium</option>
@@ -385,7 +386,7 @@ const NightreignZonePlanner = () => {
                           <select
                             value={strategy.visitNight}
                             onChange={(e) => updateZoneStrategy(zoneKey, 'visitNight', Number(e.target.value))}
-                            className="w-full bg-slate-700 rounded px-2 py-1 text-sm"
+                            className="w-full bg-slate-700 rounded px-2 py-1 text-xs lg:text-sm"
                           >
                             <option value={1}>Day 1</option>
                             <option value={2}>Night 1</option>
@@ -395,13 +396,13 @@ const NightreignZonePlanner = () => {
                           </select>
                         </div>
                         <div>
-                          <label className="text-xs text-slate-400 block mb-1">Route Order</label>
+                          <label className="text-xs text-slate-400 block mb-1">Order</label>
                           <input
                             type="number"
                             min="1"
                             value={strategy.routeOrder}
                             onChange={(e) => updateZoneStrategy(zoneKey, 'routeOrder', Number(e.target.value))}
-                            className="w-full bg-slate-700 rounded px-2 py-1 text-sm"
+                            className="w-full bg-slate-700 rounded px-2 py-1 text-xs lg:text-sm"
                           />
                         </div>
                       </div>
@@ -413,14 +414,14 @@ const NightreignZonePlanner = () => {
                           value={strategy.notes}
                           onChange={(e) => updateZoneStrategy(zoneKey, 'notes', e.target.value)}
                           placeholder="Add notes about this zone..."
-                          className="w-full bg-slate-700 rounded px-3 py-2 text-sm h-20 resize-none"
+                          className="w-full bg-slate-700 rounded px-3 py-2 text-xs lg:text-sm h-16 lg:h-20 resize-none"
                         />
                       </div>
 
                       {/* Landmarks */}
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <label className="text-sm font-semibold text-slate-300">Landmarks</label>
+                          <label className="text-xs lg:text-sm font-semibold text-slate-300">Landmarks</label>
                           {isEditing && (
                             <button
                               onClick={() => {
@@ -444,27 +445,27 @@ const NightreignZonePlanner = () => {
                               return (
                                 <div
                                   key={landmark.id}
-                                  className={`bg-slate-700 rounded p-3 flex items-center justify-between ${landmark.found ? 'opacity-60' : ''}`}
+                                  className={`bg-slate-700 rounded p-2 lg:p-3 flex items-center justify-between gap-2 ${landmark.found ? 'opacity-60' : ''}`}
                                 >
-                                  <div className="flex items-center gap-3 flex-1">
+                                  <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
                                     <button
                                       onClick={() => toggleLandmarkFound(zoneKey, landmark.id)}
-                                      className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                      className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                                         landmark.found ? 'bg-green-600 border-green-600' : 'border-slate-500'
                                       }`}
                                     >
                                       {landmark.found && <span className="text-xs">✓</span>}
                                     </button>
-                                    <LandmarkIcon className={`w-4 h-4 ${landmarkTypes[landmark.type].color}`} />
-                                    <div>
-                                      <div className="text-sm font-medium">{landmark.description}</div>
+                                    <LandmarkIcon className={`w-4 h-4 flex-shrink-0 ${landmarkTypes[landmark.type].color}`} />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-xs lg:text-sm font-medium truncate">{landmark.description}</div>
                                       <div className="text-xs text-slate-400">{landmarkTypes[landmark.type].label}</div>
                                     </div>
                                   </div>
                                   {isEditing && (
                                     <button
                                       onClick={() => deleteLandmark(zoneKey, landmark.id)}
-                                      className="text-red-400 hover:text-red-300"
+                                      className="text-red-400 hover:text-red-300 flex-shrink-0"
                                     >
                                       <X className="w-4 h-4" />
                                     </button>
@@ -473,7 +474,7 @@ const NightreignZonePlanner = () => {
                               );
                             })
                           ) : (
-                            <div className="text-sm text-slate-500 text-center py-4">
+                            <div className="text-xs lg:text-sm text-slate-500 text-center py-4">
                               No landmarks added yet
                             </div>
                           )}
