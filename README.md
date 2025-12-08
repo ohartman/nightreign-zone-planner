@@ -9,3 +9,6 @@ A zone-based strategy planner for Elden Ring: Nightreign's procedurally generate
 - Add strategy notes per zone
 - Save and load complete plans
 - Supports the 3-day/night cycle structure
+
+
+https://ohartman.github.io/nightreign-zone-planner/
